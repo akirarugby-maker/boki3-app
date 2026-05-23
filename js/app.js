@@ -286,6 +286,14 @@ function initSlidesTab() {
     const idx = STATE.slides.currentIndex;
     if (idx < window.SLIDES.length - 1) showSlideByIndex(idx + 1);
   });
+  document.getElementById('prev-slide-bottom').addEventListener('click', () => {
+    const idx = STATE.slides.currentIndex;
+    if (idx > 0) showSlideByIndex(idx - 1);
+  });
+  document.getElementById('next-slide-bottom').addEventListener('click', () => {
+    const idx = STATE.slides.currentIndex;
+    if (idx < window.SLIDES.length - 1) showSlideByIndex(idx + 1);
+  });
   // Show first slide by default if none selected
   if (!STATE.slides.themeId && window.SLIDES.length) {
     showSlideByIndex(0);
@@ -327,10 +335,17 @@ function showSlideByIndex(idx) {
 
 function updateSlidePosition() {
   const pos = document.getElementById('slide-position');
+  const posBottom = document.getElementById('slide-position-bottom');
   const idx = STATE.slides.currentIndex;
-  pos.textContent = `${idx + 1} / ${window.SLIDES.length}`;
+  const label = `${idx + 1} / ${window.SLIDES.length}`;
+  pos.textContent = label;
+  posBottom.textContent = label;
   document.getElementById('prev-slide').disabled = idx === 0;
   document.getElementById('next-slide').disabled = idx === window.SLIDES.length - 1;
+  document.getElementById('prev-slide-bottom').disabled = idx === 0;
+  document.getElementById('next-slide-bottom').disabled = idx === window.SLIDES.length - 1;
+  // 下部ナビを表示
+  document.getElementById('slide-bottom-nav').classList.remove('hidden');
 }
 
 function renderSlideContent(slide) {
@@ -373,11 +388,19 @@ function renderSlideQuiz(slide) {
   area.classList.remove('hidden');
   let html = `<div class="slide-quiz-card"><h3>✍️ 確認クイズ（${slide.quiz.length}問）</h3>`;
   slide.quiz.forEach((q, qi) => {
+    // シャッフルして正解位置をランダム化
+    const indices = q.opts.map((_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    const shuffledOpts = indices.map(i => q.opts[i]);
+    const newAns = indices.indexOf(q.ans);
     html += `<div class="quiz-q" id="sq-${qi}">
       <p>Q${qi + 1}. ${q.q}</p>
       <div class="quiz-opts">`;
-    q.opts.forEach((opt, oi) => {
-      html += `<button class="quiz-opt" data-qi="${qi}" data-oi="${oi}" data-ans="${q.ans}" data-exp="${encodeURIComponent(q.exp)}">${opt}</button>`;
+    shuffledOpts.forEach((opt, oi) => {
+      html += `<button class="quiz-opt" data-qi="${qi}" data-oi="${oi}" data-ans="${newAns}" data-exp="${encodeURIComponent(q.exp)}">${opt}</button>`;
     });
     html += `</div></div>`;
   });
@@ -390,7 +413,11 @@ function renderSlideQuiz(slide) {
       const ans = parseInt(this.dataset.ans);
       const exp = decodeURIComponent(this.dataset.exp);
       const row = area.querySelector(`#sq-${qi}`);
-      row.querySelectorAll('.quiz-opt').forEach(b => { b.disabled = true; });
+      // ボタン無効化（クリックを防ぐ、visually無効化しない）
+      row.querySelectorAll('.quiz-opt').forEach(b => {
+        b.style.pointerEvents = 'none';
+        b.style.cursor = 'default';
+      });
       if (oi === ans) {
         this.classList.add('correct');
       } else {
@@ -735,10 +762,10 @@ function filterGlossary() {
   let items = window.GLOSSARY;
   if (cat !== 'all') items = items.filter(g => g.cat === cat);
   if (search) items = items.filter(g =>
-    g.name.toLowerCase().includes(search) ||
-    (g.kana && g.kana.includes(search)) ||
+    (g.term && g.term.toLowerCase().includes(search)) ||
+    (g.read && g.read.includes(search)) ||
     (g.def && g.def.toLowerCase().includes(search)) ||
-    (g.detail && g.detail.toLowerCase().includes(search))
+    (g.point && g.point.toLowerCase().includes(search))
   );
   document.getElementById('glossary-count').textContent = `${items.length}件`;
   const container = document.getElementById('glossary-list');
@@ -763,43 +790,34 @@ function filterGlossary() {
 
 function renderGlossaryCard(g) {
   const catLabels = { asset: '資産', liability: '負債', equity: '純資産', revenue: '収益', expense: '費用', other: 'その他' };
-  let journalHtml = '';
-  if (g.journal && g.journal.length) {
-    journalHtml = `<div class="glossary-journal-ex">` +
-      g.journal.map(j => `<div class="glossary-journal-row"><span class="gj-dr">${j.dr}</span><span class="gj-amt-dr">${j.amt ? j.amt.toLocaleString() : '×××'}</span><span class="gj-cr">${j.cr}</span><span class="gj-amt-cr">${j.amt ? j.amt.toLocaleString() : '×××'}</span></div>`).join('') +
-      '</div>';
-  }
-  return `<div class="glossary-card ${g.cat}" data-id="${g.id}" data-slide="${g.slideId || ''}">
+  const pointHtml = g.point ? `<div class="glossary-detail-section"><div class="glossary-detail-label">💡 ポイント</div><div class="glossary-detail-text">${g.point}</div></div>` : '';
+  return `<div class="glossary-card ${g.cat}" data-id="${g.term}" data-slide="${g.themeId || ''}">
     <div class="glossary-term-header">
-      <span class="glossary-term-name">${g.name}</span>
-      ${g.kana ? `<span class="glossary-term-kana">（${g.kana}）</span>` : ''}
+      <span class="glossary-term-name">${g.term}</span>
+      ${g.read ? `<span class="glossary-term-kana">（${g.read}）</span>` : ''}
       <span class="glossary-cat-badge ${g.cat}">${catLabels[g.cat] || g.cat}</span>
     </div>
     <div class="glossary-term-def">${g.def}</div>
     <div class="glossary-term-detail">
-      ${g.detail ? `<div class="glossary-detail-section"><div class="glossary-detail-label">詳細説明</div><div class="glossary-detail-text">${g.detail}</div></div>` : ''}
-      ${g.example ? `<div class="glossary-detail-section"><div class="glossary-detail-label">使用例</div><div class="glossary-detail-text">${g.example}</div></div>` : ''}
-      ${journalHtml ? `<div class="glossary-detail-section"><div class="glossary-detail-label">仕訳例</div>${journalHtml}</div>` : ''}
-      ${g.slideId ? `<span class="glossary-slide-link" data-theme="${g.slideId}">📖 スライドで詳しく学ぶ</span>` : ''}
+      ${pointHtml}
+      ${g.themeId ? `<span class="glossary-slide-link" data-theme="${g.themeId}">📖 スライドで詳しく学ぶ</span>` : ''}
     </div>
   </div>`;
 }
 
-function openGlossaryTerm(id) {
-  const card = document.querySelector(`.glossary-card[data-id="${id}"]`);
+function openGlossaryTerm(term) {
+  const card = document.querySelector(`.glossary-card[data-id="${term}"]`);
   if (card) { card.classList.add('expanded'); card.scrollIntoView({ behavior: 'smooth' }); }
 }
 
 function filterGlossaryByTheme(themeId) {
-  // Find related glossary items
-  const related = window.GLOSSARY ? window.GLOSSARY.filter(g => g.slideId === themeId) : [];
+  const related = window.GLOSSARY ? window.GLOSSARY.filter(g => g.themeId === themeId) : [];
   if (related.length) {
-    // Show all but scroll to first related
     STATE.glossary.cat = 'all';
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === 'all'));
     renderGlossary();
     setTimeout(() => {
-      const el = document.querySelector(`.glossary-card[data-id="${related[0].id}"]`);
+      const el = document.querySelector(`.glossary-card[data-id="${related[0].term}"]`);
       if (el) el.scrollIntoView({ behavior: 'smooth' });
     }, 200);
   }
