@@ -604,14 +604,16 @@ body {
 .glossary-count { font-size: 12px; color: var(--text-sub); margin-bottom: 12px; }
 .glossary-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
 @media (min-width:600px) { .glossary-grid { grid-template-columns: repeat(2,1fr); } }
+/* ---- Glossary flashcard ---- */
 .glossary-card {
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 16px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: box-shadow 0.2s, transform 0.2s;
   border-left: 4px solid var(--lavender);
+  min-height: 100px;
 }
 .glossary-card:hover { box-shadow: 0 4px 12px var(--shadow-md); transform: translateY(-1px); }
 .glossary-card.asset { border-left-color: var(--pink-dark); }
@@ -620,10 +622,24 @@ body {
 .glossary-card.revenue { border-left-color: #ff9f43; }
 .glossary-card.expense { border-left-color: #a29bfe; }
 .glossary-card.other { border-left-color: var(--text-sub); }
+/* front face */
+.gc-front { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 70px; }
+.gc-front-inner { width: 100%; }
+.gc-term { font-size: 22px; font-weight: 700; color: var(--text); margin: 10px 0 4px; }
+.gc-read { font-size: 12px; color: var(--text-sub); margin-bottom: 4px; }
+.gc-hint { font-size: 11px; color: #bbb; margin-top: 10px; text-align: center; }
+/* back face */
+.gc-back { }
+.gc-back-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.gc-term-sm { font-size: 14px; font-weight: 700; color: var(--text); }
+.gc-def { font-size: 13px; color: var(--text); line-height: 1.7; margin-bottom: 10px; }
+.gc-point { font-size: 12px; background: #fffbea; border-left: 3px solid #f5c518; padding: 8px 10px; border-radius: 4px; margin-bottom: 10px; line-height: 1.6; }
+.gc-point-label { font-weight: 700; display: block; margin-bottom: 2px; }
+/* shared */
+.glossary-cat-badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 600; display: inline-block; }
 .glossary-term-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
 .glossary-term-name { font-size: 16px; font-weight: 700; color: var(--text); }
 .glossary-term-kana { font-size: 11px; color: var(--text-sub); }
-.glossary-cat-badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; margin-left: auto; font-weight: 600; }
 .glossary-cat-badge.asset { background: var(--pink-light); color: var(--pink-dark); }
 .glossary-cat-badge.liability { background: #eef0ff; color: #6b7bff; }
 .glossary-cat-badge.equity { background: var(--mint-light); color: var(--mint-dark); }

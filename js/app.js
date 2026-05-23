@@ -15,6 +15,8 @@ const STATE = {
     examTimer: null,
     examAnswers: [],
     selectedChoice: null,
+    shuffledOpts: null,
+    shuffledAns: null,
     addedRows: 1,
   },
   glossary: { search: '', cat: 'all' },
@@ -323,7 +325,7 @@ function showSlide(themeId) {
   });
   thSel.value = themeId;
   renderSlideContent(slide);
-  recordVisit(themeId, 'slides');
+  // スライドのチェックはクイズ完了時に記録（renderSlideQuiz内で実施）
   updateSlidePosition();
 }
 
@@ -405,6 +407,8 @@ function renderSlideQuiz(slide) {
     html += `</div></div>`;
   });
   html += '</div>';
+  const totalQuiz = slide.quiz.length;
+  let answeredCount = 0;
   area.innerHTML = html;
   area.querySelectorAll('.quiz-opt').forEach(btn => {
     btn.addEventListener('click', function() {
@@ -413,7 +417,9 @@ function renderSlideQuiz(slide) {
       const ans = parseInt(this.dataset.ans);
       const exp = decodeURIComponent(this.dataset.exp);
       const row = area.querySelector(`#sq-${qi}`);
-      // ボタン無効化（クリックを防ぐ、visually無効化しない）
+      if (row.dataset.answered) return;
+      row.dataset.answered = '1';
+      answeredCount++;
       row.querySelectorAll('.quiz-opt').forEach(b => {
         b.style.pointerEvents = 'none';
         b.style.cursor = 'default';
@@ -428,6 +434,10 @@ function renderSlideQuiz(slide) {
       expEl.className = 'quiz-explanation';
       expEl.textContent = exp;
       row.appendChild(expEl);
+      // 全問回答でスライドチェックを記録
+      if (answeredCount >= totalQuiz) {
+        recordVisit(slide.id, 'slides');
+      }
     });
   });
 }
@@ -576,7 +586,7 @@ function showCurrentQuestion() {
     inp.disabled = false;
   }
   document.getElementById('question-card').style.display = '';
-  if (theme) recordVisit(theme.id, 'questions');
+  // 問題演習チェックは正解時のみ（submit ハンドラで実施）
 }
 
 function renderJournalForm() {
@@ -605,7 +615,17 @@ function accountOptions() {
 function renderChoiceForm(q) {
   const container = document.getElementById('choice-options');
   const labels = ['ア', 'イ', 'ウ', 'エ'];
-  container.innerHTML = q.opts.map((opt, i) =>
+  // シャッフル
+  const indices = q.opts.map((_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  const shuffledOpts = indices.map(i => q.opts[i]);
+  const shuffledAns = indices.indexOf(q.ans);
+  STATE.questions.shuffledOpts = shuffledOpts;
+  STATE.questions.shuffledAns = shuffledAns;
+  container.innerHTML = shuffledOpts.map((opt, i) =>
     `<button class="choice-opt" data-idx="${i}"><span class="choice-label">${labels[i]}</span>${opt}</button>`
   ).join('');
   container.querySelectorAll('.choice-opt').forEach(btn => {
@@ -638,15 +658,17 @@ document.getElementById('submit-answer').addEventListener('click', () => {
     resultHtml = buildJournalResultHtml(q.entries);
   } else if (q.type === 'choice') {
     if (STATE.questions.selectedChoice === null) { alert('選択肢を選んでください'); return; }
-    correct = STATE.questions.selectedChoice === q.ans;
+    const sAns = STATE.questions.shuffledAns;
+    const sOpts = STATE.questions.shuffledOpts;
+    correct = STATE.questions.selectedChoice === sAns;
     const labels = ['ア', 'イ', 'ウ', 'エ'];
     const container = document.getElementById('choice-options');
     container.querySelectorAll('.choice-opt').forEach((btn, i) => {
       btn.disabled = true;
-      if (i === q.ans) btn.classList.add('correct');
+      if (i === sAns) btn.classList.add('correct');
       else if (i === STATE.questions.selectedChoice && !correct) btn.classList.add('wrong');
     });
-    resultHtml = `<div class="correct-answer-display"><div class="label">正解</div><div style="font-weight:700;padding:8px 0">${labels[q.ans]}. ${q.opts[q.ans]}</div></div>`;
+    resultHtml = `<div class="correct-answer-display"><div class="label">正解</div><div style="font-weight:700;padding:8px 0">${labels[sAns]}. ${sOpts[sAns]}</div></div>`;
   } else if (q.type === 'calc') {
     const inp = document.getElementById('calc-answer');
     const userAns = parseInt(inp.value);
@@ -659,6 +681,11 @@ document.getElementById('submit-answer').addEventListener('click', () => {
   recordAnswer(q.id, correct);
   if (STATE.questions.mode === 'exam') {
     STATE.questions.examAnswers.push(correct);
+  }
+  // 正解時のみ問題演習チェックを記録
+  if (correct) {
+    const theme = THEMES.find(t => t.id === q.themeId);
+    if (theme) recordVisit(theme.id, 'questions');
   }
   // Show result
   const badge = document.getElementById('result-badge');
@@ -772,10 +799,23 @@ function filterGlossary() {
   container.innerHTML = items.map(g => renderGlossaryCard(g)).join('');
   container.querySelectorAll('.glossary-card').forEach(card => {
     card.addEventListener('click', () => {
-      card.classList.toggle('expanded');
-      if (card.classList.contains('expanded')) {
-        const tid = card.dataset.slide;
-        if (tid) recordVisit(tid, 'glossary');
+      const front = card.querySelector('.gc-front');
+      const back = card.querySelector('.gc-back');
+      const isShowingFront = back.style.display === 'none' || back.style.display === '';
+      if (isShowingFront) {
+        // 表→裏へ
+        front.style.display = 'none';
+        back.style.display = 'block';
+        // 初回タップでチェック記録
+        if (!card.dataset.checked) {
+          card.dataset.checked = '1';
+          const tid = card.dataset.slide;
+          if (tid) recordVisit(tid, 'glossary');
+        }
+      } else {
+        // 裏→表へ
+        back.style.display = 'none';
+        front.style.display = '';
       }
     });
     const slideLink = card.querySelector('.glossary-slide-link');
@@ -790,17 +830,25 @@ function filterGlossary() {
 
 function renderGlossaryCard(g) {
   const catLabels = { asset: '資産', liability: '負債', equity: '純資産', revenue: '収益', expense: '費用', other: 'その他' };
-  const pointHtml = g.point ? `<div class="glossary-detail-section"><div class="glossary-detail-label">💡 ポイント</div><div class="glossary-detail-text">${g.point}</div></div>` : '';
+  const badge = `<span class="glossary-cat-badge ${g.cat}">${catLabels[g.cat] || g.cat}</span>`;
   return `<div class="glossary-card ${g.cat}" data-id="${g.term}" data-slide="${g.themeId || ''}">
-    <div class="glossary-term-header">
-      <span class="glossary-term-name">${g.term}</span>
-      ${g.read ? `<span class="glossary-term-kana">（${g.read}）</span>` : ''}
-      <span class="glossary-cat-badge ${g.cat}">${catLabels[g.cat] || g.cat}</span>
+    <div class="gc-front">
+      <div class="gc-front-inner">
+        ${badge}
+        <div class="gc-term">${g.term}</div>
+        ${g.read ? `<div class="gc-read">（${g.read}）</div>` : ''}
+      </div>
+      <div class="gc-hint">👆 タップして確認</div>
     </div>
-    <div class="glossary-term-def">${g.def}</div>
-    <div class="glossary-term-detail">
-      ${pointHtml}
+    <div class="gc-back" style="display:none">
+      <div class="gc-back-header">
+        ${badge}
+        <span class="gc-term-sm">${g.term}</span>
+      </div>
+      <div class="gc-def">${g.def}</div>
+      ${g.point ? `<div class="gc-point"><span class="gc-point-label">💡 ポイント</span>${g.point}</div>` : ''}
       ${g.themeId ? `<span class="glossary-slide-link" data-theme="${g.themeId}">📖 スライドで詳しく学ぶ</span>` : ''}
+      <div class="gc-hint">🔄 タップで戻る</div>
     </div>
   </div>`;
 }
