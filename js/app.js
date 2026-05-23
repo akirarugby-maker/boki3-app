@@ -7,7 +7,7 @@ const STATE = {
   currentTab: 'home',
   slides: { chapterId: null, themeId: null, currentIndex: 0 },
   questions: {
-    mode: null, // 'journal','calc','chapter','weak','random','exam'
+    mode: null,
     pool: [],
     currentIdx: 0,
     answered: false,
@@ -18,6 +18,7 @@ const STATE = {
     shuffledOpts: null,
     shuffledAns: null,
     addedRows: 1,
+    originSlideId: null,
   },
   glossary: { search: '', cat: 'all' },
 };
@@ -443,6 +444,7 @@ function renderSlideQuiz(slide) {
 }
 
 function goToQuestionsForTheme(themeId) {
+  STATE.questions.originSlideId = STATE.slides.themeId || themeId;
   switchTab('questions');
   setTimeout(() => startQuestionMode('chapter', themeId), 100);
 }
@@ -514,6 +516,13 @@ function startQuestionMode(mode, themeId) {
   document.getElementById('chapter-select-screen').classList.add('hidden');
   document.getElementById('exam-result-screen').classList.add('hidden');
   document.getElementById('question-area').classList.remove('hidden');
+  // 元スライドに戻るボタン
+  const backSlideBtn = document.getElementById('back-to-slide');
+  if (STATE.questions.originSlideId) {
+    backSlideBtn.classList.remove('hidden');
+  } else {
+    backSlideBtn.classList.add('hidden');
+  }
   if (mode === 'exam') {
     startExamTimer();
     document.getElementById('exam-timer').classList.remove('hidden');
@@ -702,6 +711,12 @@ document.getElementById('submit-answer').addEventListener('click', () => {
 document.getElementById('next-question').addEventListener('click', () => {
   STATE.questions.currentIdx++;
   showCurrentQuestion();
+});
+document.getElementById('back-to-slide').addEventListener('click', () => {
+  stopExamTimer();
+  const sid = STATE.questions.originSlideId;
+  STATE.questions.originSlideId = null;
+  goToSlide(sid);
 });
 document.getElementById('back-to-modes').addEventListener('click', () => {
   stopExamTimer();
