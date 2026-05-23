@@ -222,8 +222,8 @@ function setupGlobalSearch() {
     // 用語集から
     if (window.GLOSSARY) {
       window.GLOSSARY.forEach(g => {
-        if (g.name.toLowerCase().includes(q) || (g.kana && g.kana.includes(q)) || (g.def && g.def.includes(q))) {
-          found.push({ type: '用語集', name: g.name, desc: g.def ? g.def.substring(0, 40) + '...' : '', action: () => { switchTab('glossary'); setTimeout(() => openGlossaryTerm(g.id), 100); } });
+        if ((g.term && g.term.toLowerCase().includes(q)) || (g.read && g.read.includes(q)) || (g.def && g.def.includes(q))) {
+          found.push({ type: '用語集', name: g.term, desc: g.def ? g.def.substring(0, 40) + '...' : '', action: () => { switchTab('glossary'); setTimeout(() => openGlossaryTerm(g.term), 100); } });
         }
       });
     }
