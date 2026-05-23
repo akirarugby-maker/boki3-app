@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📚 簿記3級 合格アプリ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <header class="app-header">
+    <div class="header-inner">
+      <span class="header-icon">📚</span>
+      <h1>簿記3級 合格アプリ</h1>
+      <span class="header-sub">日商簿記3級 一発合格を目指そう！</span>
+    </div>
+  </header>
+
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="home">🏠<span>ホーム</span></button>
+    <button class="tab-btn" data-tab="slides">📖<span>スライド</span></button>
+    <button class="tab-btn" data-tab="questions">📝<span>問題演習</span></button>
+    <button class="tab-btn" data-tab="glossary">📚<span>用語集</span></button>
+    <button class="tab-btn" data-tab="youtube">🎥<span>YouTube</span></button>
+  </nav>
+
+  <main class="tab-contents">
+
+    <!-- ===== HOME TAB ===== -->
+    <div id="tab-home" class="tab-content active">
+
+      <!-- Search -->
+      <div class="card search-card">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="global-search" placeholder="用語・キーワードを検索（例：現金、仕訳、減価償却）">
+        </div>
+        <div id="search-results" class="search-results"></div>
+      </div>
+
+      <!-- Exam Info -->
+      <div class="card exam-info-card">
+        <h2 class="card-title">📋 日商簿記3級 試験概要</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-icon">⏱️</div>
+            <div class="info-label">試験時間</div>
+            <div class="info-value">60分</div>
+          </div>
+          <div class="info-item">
+            <div class="info-icon">🎯</div>
+            <div class="info-label">合格基準</div>
+            <div class="info-value">70点以上</div>
+          </div>
+          <div class="info-item">
+            <div class="info-icon">💴</div>
+            <div class="info-label">受験費用</div>
+            <div class="info-value">2,850円</div>
+          </div>
+          <div class="info-item">
+            <div class="info-icon">💻</div>
+            <div class="info-label">試験形式</div>
+            <div class="info-value">ネット試験・統一試験</div>
+          </div>
+        </div>
+        <div class="exam-points">
+          <h3>✨ 合格のポイント</h3>
+          <ul>
+            <li>🔑 仕訳の基本ルール（借方・貸方）をしっかりマスターする</li>
+            <li>📖 勘定科目を正確に覚える（資産・負債・純資産・収益・費用）</li>
+            <li>📊 決算整理仕訳のパターンを身につける</li>
+            <li>📄 試算表・精算表・財務諸表の作成手順を理解する</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Countdown -->
+      <div class="card countdown-card">
+        <h2 class="card-title">⏰ 試験までのカウントダウン</h2>
+        <div class="countdown-display">
+          <div class="countdown-number" id="days-count">---</div>
+          <div class="countdown-label">日</div>
+        </div>
+        <p class="exam-date">🗓️ 試験日：2027年4月1日</p>
+        <p class="countdown-msg" id="countdown-msg"></p>
+      </div>
+
+      <!-- Progress Table -->
+      <div class="card progress-card">
+        <h2 class="card-title">📊 学習進捗表</h2>
+        <p class="progress-hint">各ページを開くたびに自動でチェックが入ります。3回訪問で「習得済み」になります！</p>
+        <div id="progress-table-container"></div>
+      </div>
+    </div>
+
+    <!-- ===== SLIDES TAB ===== -->
+    <div id="tab-slides" class="tab-content">
+      <div class="slides-controls">
+        <div class="slide-selector">
+          <select id="slide-chapter-select" class="select-input">
+            <option value="">📚 章を選択...</option>
+          </select>
+          <select id="slide-theme-select" class="select-input">
+            <option value="">📌 テーマを選択...</option>
+          </select>
+        </div>
+        <div class="slide-nav-btns">
+          <button id="prev-slide" class="btn-secondary">◀ 前へ</button>
+          <span id="slide-position" class="slide-pos"></span>
+          <button id="next-slide" class="btn-primary">次へ ▶</button>
+        </div>
+      </div>
+      <div id="slide-content" class="slide-content-area"></div>
+      <div id="slide-quiz-area" class="hidden"></div>
+    </div>
+
+    <!-- ===== QUESTIONS TAB ===== -->
+    <div id="tab-questions" class="tab-content">
+
+      <!-- Mode Selection -->
+      <div id="question-mode-screen">
+        <h2 class="section-title">📝 問題演習モードを選択</h2>
+        <div class="mode-grid">
+          <button class="mode-btn" data-mode="journal">
+            <div class="mode-icon">✏️</div>
+            <div class="mode-name">仕訳問題</div>
+            <div class="mode-desc">借方・貸方に記入する形式</div>
+          </button>
+          <button class="mode-btn" data-mode="calc">
+            <div class="mode-icon">🔢</div>
+            <div class="mode-name">計算問題</div>
+            <div class="mode-desc">試算表・財務諸表の数値計算</div>
+          </button>
+          <button class="mode-btn" data-mode="chapter">
+            <div class="mode-icon">📚</div>
+            <div class="mode-name">分野別出題</div>
+            <div class="mode-desc">章・テーマを選んで学習</div>
+          </button>
+          <button class="mode-btn" data-mode="weak">
+            <div class="mode-icon">😰</div>
+            <div class="mode-name">苦手問題</div>
+            <div class="mode-desc">間違えた問題を重点練習</div>
+          </button>
+          <button class="mode-btn" data-mode="random">
+            <div class="mode-icon">🎲</div>
+            <div class="mode-name">ランダム出題</div>
+            <div class="mode-desc">全範囲からランダムに出題</div>
+          </button>
+          <button class="mode-btn" data-mode="exam">
+            <div class="mode-icon">🏆</div>
+            <div class="mode-name">模擬試験</div>
+            <div class="mode-desc">60分・合格基準70点</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Chapter Select (for chapter mode) -->
+      <div id="chapter-select-screen" class="hidden">
+        <h2 class="section-title">📚 分野を選択</h2>
+        <div id="chapter-select-list"></div>
+        <button id="back-from-chapter" class="btn-link">← 戻る</button>
+      </div>
+
+      <!-- Question Area -->
+      <div id="question-area" class="hidden">
+        <div class="question-header-bar">
+          <button id="back-to-modes" class="btn-link">← モード選択</button>
+          <div class="q-progress-wrap">
+            <span id="q-progress-text"></span>
+            <div id="q-progress-bar-wrap"><div id="q-progress-bar"></div></div>
+          </div>
+          <div id="exam-timer" class="hidden">⏱️ <span id="timer-display">60:00</span></div>
+        </div>
+
+        <div class="card question-card" id="question-card">
+          <div class="q-meta">
+            <span id="q-chapter-badge" class="badge badge-chapter"></span>
+            <span id="q-theme-badge" class="badge badge-theme"></span>
+            <span id="q-diff-badge" class="badge badge-diff"></span>
+            <span id="q-type-badge" class="badge badge-type"></span>
+          </div>
+          <p id="question-text" class="question-text"></p>
+
+          <!-- Journal Entry Form -->
+          <div id="journal-form" class="hidden">
+            <p class="form-hint">勘定科目を選択し、金額を入力してください</p>
+            <div class="journal-table-wrap">
+              <table class="journal-table">
+                <thead>
+                  <tr>
+                    <th>借方（左）勘定科目</th>
+                    <th>金額（円）</th>
+                    <th>貸方（右）勘定科目</th>
+                    <th>金額（円）</th>
+                  </tr>
+                </thead>
+                <tbody id="journal-rows"></tbody>
+              </table>
+            </div>
+            <button id="add-journal-row" class="btn-link small">+ 行を追加</button>
+          </div>
+
+          <!-- Multiple Choice -->
+          <div id="choice-form" class="hidden">
+            <div id="choice-options" class="choice-options"></div>
+          </div>
+
+          <!-- Calculation -->
+          <div id="calc-form" class="hidden">
+            <div class="calc-input-wrap">
+              <input type="number" id="calc-answer" class="calc-input" placeholder="金額を入力">
+              <span class="calc-unit">円</span>
+            </div>
+          </div>
+
+          <div class="question-actions" id="question-actions">
+            <button id="submit-answer" class="btn-primary btn-large">答え合わせ ✓</button>
+          </div>
+        </div>
+
+        <!-- Answer Result -->
+        <div id="answer-result" class="hidden">
+          <div class="card result-card">
+            <div id="result-badge" class="result-badge"></div>
+            <div id="correct-answer-display" class="correct-answer-display"></div>
+            <div class="explanation-box">
+              <h4>💡 解説</h4>
+              <div id="explanation-text" class="explanation-text"></div>
+            </div>
+            <div class="result-actions">
+              <button id="go-to-slide" class="btn-secondary">📖 スライドで復習</button>
+              <button id="next-question" class="btn-primary">次の問題 ▶</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exam Result -->
+      <div id="exam-result-screen" class="hidden">
+        <div class="card exam-result-card">
+          <h2 class="card-title">📊 模擬試験 結果</h2>
+          <div id="exam-score-display" class="exam-score-display"></div>
+          <button id="retry-exam" class="btn-primary">もう一度試験を受ける</button>
+          <button id="back-from-exam" class="btn-secondary">モード選択に戻る</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== GLOSSARY TAB ===== -->
+    <div id="tab-glossary" class="tab-content">
+      <div class="glossary-controls">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="glossary-search" placeholder="用語を検索...">
+        </div>
+        <div class="category-filters" id="glossary-filters">
+          <button class="filter-btn active" data-cat="all">すべて</button>
+          <button class="filter-btn" data-cat="asset">🏦 資産</button>
+          <button class="filter-btn" data-cat="liability">💳 負債</button>
+          <button class="filter-btn" data-cat="equity">💰 純資産</button>
+          <button class="filter-btn" data-cat="revenue">📈 収益</button>
+          <button class="filter-btn" data-cat="expense">📉 費用</button>
+          <button class="filter-btn" data-cat="other">📋 その他</button>
+        </div>
+      </div>
+      <div id="glossary-count" class="glossary-count"></div>
+      <div id="glossary-list" class="glossary-grid"></div>
+    </div>
+
+    <!-- ===== YOUTUBE TAB ===== -->
+    <div id="tab-youtube" class="tab-content">
+      <div class="youtube-header">
+        <h2 class="card-title">🎥 YouTube動画で学ぼう！</h2>
+        <p>各テーマの解説動画をYouTubeで検索できます。ボタンを押すと新しいタブで開きます。</p>
+      </div>
+      <div id="youtube-themes-list"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Slide Detail Modal -->
+<div id="glossary-modal" class="modal hidden">
+  <div class="modal-overlay" id="modal-overlay"></div>
+  <div class="modal-content">
+    <button class="modal-close" id="modal-close">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script src="js/questions.js"></script>
+<script src="js/slides.js"></script>
+<script src="js/glossary.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
