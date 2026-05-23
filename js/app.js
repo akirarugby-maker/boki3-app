@@ -655,30 +655,30 @@ document.getElementById('back-to-modes').addEventListener('click', () => {
 });
 
 function checkJournalAnswer(user, correct) {
-  if (user.length !== correct.length) {
-    // Try matching by checking all entries
-    if (user.length === 0) return false;
-  }
-  // Check if each correct entry is matched
+  if (user.length === 0) return false;
   const matched = correct.map(ce => {
+    const ceDr = ce.drAmt !== undefined ? ce.drAmt : ce.amt;
+    const ceCr = ce.crAmt !== undefined ? ce.crAmt : ce.amt;
     return user.some(ue =>
       ue.dr === ce.dr && ue.cr === ce.cr &&
-      (Math.abs((ue.drAmt || 0) - ce.amt) <= 1) &&
-      (Math.abs((ue.crAmt || 0) - ce.amt) <= 1)
+      Math.abs((ue.drAmt || 0) - ceDr) <= 1 &&
+      Math.abs((ue.crAmt || 0) - ceCr) <= 1
     );
   });
   return matched.every(Boolean);
 }
 
 function buildJournalResultHtml(entries) {
-  let rows = entries.map(e =>
-    `<div class="correct-journal-row">
+  let rows = entries.map(e => {
+    const dr = e.drAmt !== undefined ? e.drAmt : e.amt;
+    const cr = e.crAmt !== undefined ? e.crAmt : e.amt;
+    return `<div class="correct-journal-row">
       <span class="cj-dr">${e.dr}</span>
-      <span class="cj-dr-amt">${e.amt.toLocaleString()}</span>
+      <span class="cj-dr-amt">${dr.toLocaleString()}</span>
       <span class="cj-cr">${e.cr}</span>
-      <span class="cj-cr-amt">${e.amt.toLocaleString()}</span>
-    </div>`
-  ).join('');
+      <span class="cj-cr-amt">${cr.toLocaleString()}</span>
+    </div>`;
+  }).join('');
   return `<div class="correct-answer-display"><div class="label">正しい仕訳</div><div class="correct-journal">${rows}</div></div>`;
 }
 
